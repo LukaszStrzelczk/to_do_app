@@ -1,0 +1,8 @@
+[Tasks]
+Title: Learn Rust
+Description: Complete the Rust book and exercises.
+Title: Grocery Shopping
+Description: Buy milk, eggs, and bread.
+[Done]
+Title: Morning Run
+Description: Ran 5km in the park.
