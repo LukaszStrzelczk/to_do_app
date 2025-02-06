@@ -1,13 +1,11 @@
 mod task;
-use std::{
-    io, thread,
-    time::{self, Duration},
-};
+use core::time::Duration;
+use std::{io, thread, time};
 use task::to_do_list::ToDoList;
 fn main() {
+    let mut list = config();
     println!("Hello, world!");
     let mut input_buffer = String::new();
-    let mut list = ToDoList::new();
     loop {
         input_buffer.clear();
         cls();
@@ -103,7 +101,7 @@ fn delete_task(list: &mut ToDoList) {
 }
 /// Prompts the user for input to complete specific task and removes it from `tasks` list and adds it to `done` list
 /// # Arguments
-/// * `list` - A mutable reference to the `ToDoList` 
+/// * `list` - A mutable reference to the `ToDoList`
 fn mark_as_done(list: &mut ToDoList) {
     cls();
     list.show();
@@ -155,7 +153,63 @@ fn save_to_file(list: &ToDoList) {
 
 /// Enables user to load `ToDoList` state from a txt file
 /// # Arguments
-/// * `list` - A mutable reference to the `ToDoList` 
-fn load_from_file(list: &mut ToDoList){
-    todo!();
+/// * `list` - A mutable reference to the `ToDoList`
+fn load_from_file(list: &mut ToDoList) {
+    let mut buf = String::new();
+    println!("Enter file name:");
+    io::stdin()
+        .read_line(&mut buf)
+        .expect("unable to read a line");
+
+    match list.read_from_file(buf.trim()) {
+        Ok(_) => {
+            println!("Succesfully loaded to do list from file. \nIt was appended to currently existing one.");
+            thread::sleep(Duration::from_millis(1500));
+        }
+        Err(e) => {
+            println!(
+                "There was an error while utempting to read a file.\n
+                Error: {}",
+                e
+            );
+            thread::sleep(Duration::from_millis(1500));
+        }
+    }
+}
+
+/// enables user to pass filenam to load from as cmd argument
+fn config() -> ToDoList {
+    use std::env;
+    let mut list = ToDoList::new();
+    let mut args = env::args();
+
+    thread::sleep(Duration::from_secs(2));
+    if args.len() < 2 {
+        return list;
+    }
+    if args.len() > 2 {
+        println!("wrong number of input arguments");
+        return list;
+    }
+    args.next(); //ignore first argument because it is a programm name
+    if let Some(file) = args.next() {
+        match list.read_from_file(&file) {
+            Ok(_) => {
+                println!("Succesfully loaded to do list from file. \nIt was appended to currently existing one.");
+                thread::sleep(Duration::from_millis(1500));
+                list
+            }
+            Err(e) => {
+                println!(
+                    "There was an error while utempting to read a file.\n
+                    Error: {}",
+                    e
+                );
+                thread::sleep(Duration::from_millis(1500));
+                list
+            }
+        }
+    } else {
+        list
+    }
 }

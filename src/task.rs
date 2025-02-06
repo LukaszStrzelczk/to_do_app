@@ -43,6 +43,7 @@ pub mod to_do {
 }
 
 pub mod to_do_list {
+    use core::option::Option::None;
     use std::{
         fs::{create_dir, File},
         io::{BufRead, Write},
@@ -157,10 +158,11 @@ pub mod to_do_list {
         /// # Arguments
         /// * `file_path` - A `&str` that represents a path to a file
         pub fn read_from_file(&mut self, file_path: &str) -> Result<(), std::io::Error> {
+            let file_path = Path::new("saves").join(file_path);
             let file = File::open(file_path)?;
             let reader = std::io::BufReader::new(file);
             let mut section: Option<Section> = None;
-            let mut title=String::new();
+            let mut title = String::new();
             let mut description;
             for line in reader.lines() {
                 let line = line?; //error propagation
@@ -189,16 +191,14 @@ pub mod to_do_list {
                             let task = Task::new(&title, description);
                             self.done.push(task);
                         }
-                        None => {
+                        _ => {
                             return Err(std::io::Error::new(
                                 std::io::ErrorKind::InvalidData,
                                 "File is corrupted",
                             ));
                         }
-                        
                     }
                 };
-
             }
             Ok(())
         }
@@ -225,7 +225,6 @@ mod tests {
         assert!(list.done().is_empty());
         assert!(list.taks().is_empty());
     }
-
     #[test]
     fn add_task_test() {
         let mut list = ToDoList::new();
@@ -312,12 +311,9 @@ mod tests {
         for (line, expected) in reader.lines().zip(expected_content) {
             assert_eq!(line?, expected);
         }
-
-        // Cleanup: Remove the test file
-        std::fs::remove_file(test_file_path)?;
         Ok(())
     }
-   #[test]
+    #[test]
     fn test_read_from_file() {
         let tasks = vec![
             Task::new("Learn Rust", "Complete the Rust book and exercises."),
@@ -327,8 +323,14 @@ mod tests {
         let list = ToDoList::new_from_exisitng(tasks.clone(), done.clone());
         list.save_to_file("test").unwrap();
         let mut list2 = ToDoList::new();
-        list2.read_from_file("saves/test.txt").unwrap();
+        list2.read_from_file("test.txt").unwrap();
         assert_eq!(list2.taks(), tasks);
         assert_eq!(list2.done(), done);
+    }
+    #[test]
+    #[should_panic]
+    fn read_from_file_panic_test() {
+        let mut list = ToDoList::new();
+        list.read_from_file("panic_test.txt").unwrap();
     }
 }
